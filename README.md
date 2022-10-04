@@ -22,27 +22,27 @@ Chip used is a 5x11 dot matrix 1602 display where each position is a single char
 
 ### Instruction description
 
-Clear display Clears  - Display and returns cursor to the home position (address 0).
+Clear display:      Clears Display and returns cursor to the home position (address 0).
 
-Cursor home           - Returns cursor to home position. Also returns display being shifted to the original position. DDRAM content remains unchanged. 	
+Cursor home:        Returns cursor to home position. Also returns display being shifted to the original position. DDRAM content remains unchanged. 	
 
-Entry mode set        - Sets cursor move direction (I/D); specifies to shift the display (S). These operations are performed during data read/write. 	
+Entry mode set:     Sets cursor move direction (I/D); specifies to shift the display (S). These operations are performed during data read/write. 	
 
-Display control       - Sets on/off of all display (D), cursor on/off (C), and blink of cursor position character (B). 	
+Display control:    Sets on/off of all display (D), cursor on/off (C), and blink of cursor position character (B). 	
 
-display shift 	      - Sets cursor-move or display-shift (S/C), shift direction (R/L). DDRAM content remains unchanged. 	
+display shift: 	    Sets cursor-move or display-shift (S/C), shift direction (R/L). DDRAM content remains unchanged. 	
 
-Function set 	        - Sets interface data length (DL), number of display line (N), and character font (F). 	
+Function set: 	    Sets interface data length (DL), number of display line (N), and character font (F). 	
 
-Set CGRAM address     - Sets the CGRAM address. CGRAM data are sent and received after this setting. 	
+Set CGRAM address:  Sets the CGRAM address. CGRAM data are sent and received after this setting. 	
 
-Set DDRAM address     - Sets the DDRAM address. DDRAM data are sent and received after this setting. 	
+Set DDRAM address:  Sets the DDRAM address. DDRAM data are sent and received after this setting. 	
 
-Read busy flag  	    - Reads busy flag (BF) indicating internal operation being performed and reads CGRAM or DDRAM address counter contents (depending on previous instruction). 	
+Read busy flag:  	  Reads busy flag (BF) indicating internal operation being performed and reads CGRAM or DDRAM address counter contents (depending on previous instruction). 	
 
-Write RAM 	          - Write data to CGRAM or DDRAM. 	
+Write RAM: 	        Write data to CGRAM or DDRAM. 	
 
-Read from CG/DDRAM 	  - Read data from CGRAM or DDRAM. 	
+Read from CG/DDRAM: Read data from CGRAM or DDRAM. 	
 
 
 ### Instruction bit definition
@@ -80,7 +80,7 @@ Read from CG/DDRAM 	  - Read data from CGRAM or DDRAM.
 | Move cursor left by one character     | 0x10 |
 | Move cursor right by one character    | 0x14 |
 | Clear Display (clear DDRAM content)   | 0x01 |
-| Set DDRAM address or coursor position on display   | 0x80 + address |
+| Set DDRAM address or cursor position on display   | 0x80 + address |
 | Set CGRAM address or set pointer to CGRAM location | 0x40 + address |
 
 * DDRAM address
@@ -92,3 +92,8 @@ Read from CG/DDRAM 	  - Read data from CGRAM or DDRAM.
 ```
 
 https://www.8051projects.net/lcd-interfacing/initialization.php
+
+
+## RFID Chip
+
+The MFRC522 chip is a read-write chip for contact communications at 13.56MHZ which also supports ISO 14443A / MIFRARE mode.

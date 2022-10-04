@@ -38,8 +38,7 @@ Example commands:
 3	Function Set: 4-bit, 1 Line, 5x7 Dots	0x20	32
 4	Function Set: 4-bit, 2 Line, 5x7 Dots	0x28	40
 5	Entry Mode	0x06	6
-6	Display off Cursor off
-(clearing display without clearing DDRAM content)	0x08	8
+6	Display off Cursor off (clearing display without clearing DDRAM content)	0x08	8
 7	Display on Cursor on	0x0E	14
 8	Display on Cursor off	0x0C	12
 9	Display on Cursor blinking	0x0F	15
@@ -75,10 +74,11 @@ https://www.8051projects.net/lcd-interfacing/initialization.php
    #define LOGLN(...)
 #endif
 
-#define SERIAL_BAUD 115200
+#define SERIAL_BAUD 115200 // Baud rate for serial debugging
 
-#define RFID_RST_PIN 12  // Configurable, see typical pin layout above
-#define RFID_SS_PIN 53   // Configurable, see typical pin layout above
+#define RFID_RESET_PIN 12  
+#define RFID_SS_PIN 53   // Signal Input (when SPI enabled), Serial Data (when I2C enabled), Data input (When UART enabled)
+
 #define NEW_RFID_UID { 0xDE, 0xAD, 0xBE, 0xEF }
 
 
@@ -88,10 +88,20 @@ int LCD_PINS[] = { 3, 4, 5, 6, 7, 8, 9, 10 };
 int LCD_ENABLE = 2;
 
 
-MFRC522 mfrc522(RFID_SS_PIN, RFID_RST_PIN); 
+MFRC522 mfrc522(RFID_SS_PIN, RFID_RESET_PIN); 
 MFRC522::MIFARE_Key key;
 
 
+// LCD helper functions
+
+/**
+  Write command to LCD interface, each bit of the supplied value is sent to one of the data 
+  pins on the 1602 chip. The value needs to be inverted because the signal identification 
+  goes from D7 -> D0 instead of D0 -> D7
+
+  value:  Command to send to LCD chip.
+  return: void
+**/
 void LcdCommandWrite(int value) {
   size_t pinLength = sizeof(LCD_PINS) / sizeof(int) - 1;
   
@@ -113,6 +123,15 @@ void LcdCommandWrite(int value) {
   delayMicroseconds(1);
 }
 
+/**
+  Write data to LCD interface, each bit of the supplied value is sent to one of the data 
+  pins on the 1602 chip. The value needs to be inverted because the signal identification 
+  goes from D7 -> D0 instead of D0 -> D7
+
+  value:  Data to send to LCD chip.
+  return: void
+
+**/
 void LcdDataWrite(int value) {
   digitalWrite(LCD_REGISTER_SELECT, HIGH);
   digitalWrite(LCD_RW, LOW);
@@ -132,10 +151,213 @@ void LcdDataWrite(int value) {
   delayMicroseconds(1);
 }
 
-void setup() {
-  Serial.begin(SERIAL_BAUD);  // Initialize serial communications with the PC
+/**
+  Returns cursor to home position. Also returns display being shifted to the original position. DDRAM content remains unchanged. 	
 
-  while (!Serial);  // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
+  return: void
+
+**/
+void clearDisplay() {
+  LcdCommandWrite(0x01);  
+  delay(10);
+}
+
+
+/**
+  Set cursor position to be the first line with an optional offset.
+
+  offset: column offset 	
+
+  return: void
+
+**/
+void firstLine(unsigned int offset) {
+  LcdCommandWrite(0x80 + offset);  // Define the cursor position
+  delay(10);
+}
+
+/**
+  Set cursor position to be the second line with an optional offset.
+
+  offset: column offset 	
+
+  return: void
+
+**/
+void secondLine(unsigned int offset) {
+  LcdCommandWrite(0xc0 + offset);  // Define the cursor position
+  delay(10);
+}
+
+/**
+  Write a string of text to currently defined line on the LCD
+
+  text: A string of text to write to the LCD
+**/
+void writeText(unsigned char *text) {
+  if (NULL != text) {
+    for (int i = 0; i < strlen(text); i++) {
+      LcdDataWrite(text[i]);
+    }
+
+    delay(10);
+  }
+}
+
+// RFID helper functions
+
+/**
+  Determine if a new card has been presented.
+
+  return: True if the presented card has a differernt UID than the previously presented card
+**/
+bool isNewCard() {
+  return mfrc522.PICC_IsNewCardPresent();
+}
+
+
+/**
+  Determine if a the card reader is active.
+
+  return: True if the card reader is active.
+**/
+bool canReadSerial() {
+  return mfrc522.PICC_ReadCardSerial();
+}
+
+
+/**
+  Determine if a new card has been presented and the card reader is active.
+
+  return: True if the presented card has a differernt UID than the previously presented card and the card reader is active.
+**/
+
+bool willRead() {
+  return isNewCard() && canReadSerial();
+}
+
+
+void dumpData(byte block) {
+  byte buffer1[18];
+  byte len = 18;
+  byte status = 0;
+
+  MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
+  bool needAuth = MFRC522::PICC_TYPE_MIFARE_MINI == piccType || MFRC522::PICC_TYPE_MIFARE_1K == piccType || MFRC522::PICC_TYPE_MIFARE_4K == piccType;
+
+  if (needAuth) {
+    status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, &key, &(mfrc522.uid)); //line 834 of MFRC522.cpp file
+
+    if (status != MFRC522::STATUS_OK) {
+      LOG(F("Auth failed: "));
+      LOG(mfrc522.GetStatusCodeName(status));
+      return;
+    }
+  }
+  
+  status = mfrc522.MIFARE_Read(block, buffer1, &len);  
+  
+  if (status != MFRC522::STATUS_OK) {
+    LOG(F("Reading failed: "));
+    LOG(mfrc522.GetStatusCodeName(status));
+    return;
+  }
+
+  // if (needAuth) {
+  //   mfrc522.PCD_StopCrypto1();
+  // }
+
+  for (uint8_t i = 0; i < 16; i++) {
+    if (buffer1[i] < 0x10) {
+      Serial.print("0");      
+    }
+    Serial.print(buffer1[i], HEX);
+    Serial.print(" ");
+  }
+  
+  // Serial.print("   ");
+
+
+  Serial.println("");
+}
+/**
+
+**/
+void dumpPicType() {
+
+  dumpData(0);
+  dumpData(1);
+  dumpData(2);
+  dumpData(3);
+
+  LOGLN("");
+
+  MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
+
+  LOG(F("PICC type: "));
+  LOG(mfrc522.PICC_GetTypeName(piccType));
+  LOG(F(" (SAK "));
+  LOG(mfrc522.uid.sak);
+  LOGLN(")");
+
+  if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI
+      && piccType != MFRC522::PICC_TYPE_MIFARE_1K
+      && piccType != MFRC522::PICC_TYPE_MIFARE_4K) {
+    LOGLN(F("This sample only works with MIFARE Classic cards."));
+    return;
+  }
+}
+
+void toHex(unsigned char *in, size_t in_sz, unsigned char *out) {
+  const char *hex = "0123456789ABCDEF";
+
+  unsigned char *pin = in;
+  unsigned char *pout = out;
+
+  for (; pin < in + in_sz; pin++, pout += 3) {
+    pout[0] = hex[(*pin >> 4) & 0xF];
+    pout[1] = hex[ *pin       & 0xF];
+    pout[2] = ' ';
+  }
+  
+  pout[-1] = 0;
+}
+
+void dumpHex(unsigned char *in, size_t insz) {
+  clearDisplay();
+  firstLine(0);
+
+  char hexValue[insz * 3];
+  toHex(in, insz, hexValue);
+  LOGLN(hexValue);
+  writeText(hexValue);
+}
+
+void dumpUID() {
+  LOG(F("Card UID: "));
+  dumpHex(mfrc522.uid.uidByte, mfrc522.uid.size);
+  LOGLN("");
+}
+
+void setUID(byte *newUid, byte uidSize) {
+  if (mfrc522.MIFARE_SetUid(newUid, uidSize, true)) {
+    LOGLN(F("Wrote new UID to card."));
+  } else {
+    LOGLN(F("Failed to write UID."));
+  }
+  delay(2000);
+}
+
+void dumpContents() {
+  LOGLN(F("UID and contents:"));
+  mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
+}
+
+void setup() {
+  #ifdef DEBUG
+    Serial.begin(SERIAL_BAUD);  
+    while (!Serial);  
+  #endif
 
   /*
     Configure RFID
@@ -173,113 +395,7 @@ void setup() {
   delay(20);
 }
 
-void clearDisplay() {
-  LcdCommandWrite(0x01);  // The screen is empty and the cursor position is zeroed
-  delay(10);
-}
 
-void firstLine(unsigned int offset) {
-  LcdCommandWrite(0x80 + offset);  // Define the cursor position
-  delay(10);
-}
-
-void secondLine(unsigned int offset) {
-  LcdCommandWrite(0xc0 + offset);  // Define the cursor position
-  delay(10);
-}
-
-
-void writeText(unsigned char *text) {
-  if (NULL != text) {
-    for (int i = 0; i < strlen(text); i++) {
-      LcdDataWrite(text[i]);
-    }
-
-    delay(10);
-  }
-}
-
-// Setting the UID can be as simple as this:
-//void loop() {
-//  byte newUid[] = NEW_UID;
-//  if ( mfrc522.MIFARE_SetUid(newUid, (byte)4, true) ) {
-//    Serial.println("Wrote new UID to card.");
-//  }
-//  delay(2000);
-//}
-
-
-bool isNewCard() {
-  return mfrc522.PICC_IsNewCardPresent();
-}
-
-bool canReadSerial() {
-  return mfrc522.PICC_ReadCardSerial();
-}
-
-bool willRead() {
-  return isNewCard() && canReadSerial();
-}
-
-
-void dumpPicType() {
-  MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
-  Serial.print(F("PICC type: "));
-  Serial.print(mfrc522.PICC_GetTypeName(piccType));
-  Serial.print(F(" (SAK "));
-  Serial.print(mfrc522.uid.sak);
-  Serial.print(")\r\n");
-
-  if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI
-      && piccType != MFRC522::PICC_TYPE_MIFARE_1K
-      && piccType != MFRC522::PICC_TYPE_MIFARE_4K) {
-    Serial.println(F("This sample only works with MIFARE Classic cards."));
-    return;
-  }
-}
-
-void toHex(unsigned char *in, size_t in_sz, unsigned char *out) {
-  const char *hex = "0123456789ABCDEF";
-
-  unsigned char *pin = in;
-  unsigned char *pout = out;
-
-  for (; pin < in + in_sz; pin++, pout += 3) {
-    pout[0] = hex[(*pin >> 4) & 0xF];
-    pout[1] = hex[ *pin       & 0xF];
-    pout[2] = ' ';
-  }
-  
-  pout[-1] = 0;
-}
-
-void dumpHex(unsigned char *in, size_t insz) {
-  clearDisplay();
-  firstLine(0);
-
-  char hexValue[insz * 3];
-  toHex(in, insz, hexValue);
-  writeText(hexValue);
-}
-
-void dumpUID() {
-  LOG(F("Card UID: "));
-  dumpHex(mfrc522.uid.uidByte, mfrc522.uid.size);
-  LOGLN("");
-}
-
-void setUID(byte *newUid, byte uidSize) {
-  if (mfrc522.MIFARE_SetUid(newUid, uidSize, true)) {
-    LOGLN(F("Wrote new UID to card."));
-  } else {
-    LOGLN(F("Failed to write UID."));
-  }
-}
-
-void dumpContents() {
-  LOGLN(F("UID and contents:"));
-  mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
-}
 
 void loop() {
   if (!willRead()) {
