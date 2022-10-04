@@ -6,20 +6,19 @@
 Chip used is a 5x11 dot matrix 1602 display where each position is a single character. This chip can display 2 lines of 16 characters.
 
 
-| Instruction        | Code                                       | Execution Time | Description |
-|--------------------|--------------------------------------------|----------------|-------------|
-|                    |  RS  R/W  B7  B6  B5  B4  B3  B2  B1  B0   |                |             |
-| Clear display      |   0  0    0  0  0  0  0  0  0  1           | 1.52 ms        | Clears display and returns cursor to the home position (address 0). |
-| Cursor home        |   0  0    0  0  0  0  0  0  1  *           | 1.52 ms        | Returns cursor to home position. Also returns display being shifted to the original position. DDRAM content remains unchanged. |
-| Entry mode set     |   0  0    0  0  0  0  0  1  I/D S          | 37 μs          | Sets cursor move direction (I/D); specifies to shift the display (S). These operations are performed during data read/write. |
-| Display control    |   0  0    0  0  0  0  1  D  C  B           | 37 μs          | Sets on/off of all display (D), cursor on/off (C), and blink of cursor position character (B). |  
-| Display shift      |   0  0    0  0  0  1  S/C R/L *  *         | 37 μs          | Sets cursor-move or display-shift (S/C), shift direction (R/L). DDRAM content remains unchanged. |  
-| Function set       |   0  0    0  0  1  DL  N  F  *  *          | 37 μs          | Sets interface data length (DL), number of display line (N), and character font (F). |  
-| Set CGRAM address  |   0  0    0  1  CGRAM address              | 37 μs          | Sets the CGRAM address. CGRAM data are sent and received after this setting. |  
-| Set DDRAM address  |   0  0    1  DDRAM address                 | 37 μs          | Sets the DDRAM address. DDRAM data are sent and received after this setting. |  
-| Read busy flag     |   0  1    BF  CGRAM/DDRAM address          | 0 μs           | Reads busy flag (BF) indicating internal operation being performed and reads CGRAM or DDRAM address counter contents (depending on previous instruction). |
-| Write RAM          |   1  0    Write Data                       | 37 μs          | Write data to CGRAM or DDRAM. | 
-| Read from CG/DDRAM |   1  1    Read Data                        | 37 μs          | Read data from CGRAM or DDRAM. |  
+| Instruction        | RS | R/W | B7 | B6 | B5 | B4 | B3 | B2 | B1 | B0 | Execution Time |
+|--------------------|----|-----|----|----|----|----|----|----|----|----|----------------|
+| Clear display      | 0  | 0   | 0  | 0  | 0  | 0  | 0  | 0  | 0  | 1  | 1.52 ms |
+| Cursor home        | 0  | 0   | 0  | 0  | 0  | 0  | 0  | 0  | 1  | *  | 1.52 ms | 
+| Entry mode set     | 0  | 0   | 0  | 0  | 0  | 0  | 0  | 1  | I/D| S  | 37 μs   | 
+| Display control    | 0  | 0   | 0  | 0  | 0  | 0  | 1  | D  | C  | B  | 37 μs   |
+| Display shift      | 0  | 0   | 0  | 0  | 0  | 1  | S/C| R/L| *  | *  | 37 μs   |
+| Function set       | 0  | 0   | 0  | 0  | 1  | DL | N  | F  | *  | *  | 37 μs   |
+| Set CGRAM address  | 0  | 0   | 0  | 1  |ADDR|    |    |    |    |    | 37 μs   |
+| Set DDRAM address  | 0  | 0   | 1  |ADDR|    |    |    |    |    |    | 37 μs   |
+| Read busy flag     | 0  | 1   | BF |ADDR|    |    |    |    |    |    | 0 μs    |
+| Write RAM          | 1  | 0   |DATA|    |    |    |    |    |    |    | 37 μs   |
+| Read from CG/DDRAM | 1  | 1   |DATA|    |    |    |    |    |    |    | 37 μs   |
 
 Instruction bit names —
 
