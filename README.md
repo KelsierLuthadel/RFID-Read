@@ -97,3 +97,6 @@ https://www.8051projects.net/lcd-interfacing/initialization.php
 ## RFID Chip
 
 The MFRC522 chip is a read-write chip for contact communications at 13.56MHZ which also supports ISO 14443A / MIFRARE mode.
+
+
+![Circuit](./arduino.svg)
