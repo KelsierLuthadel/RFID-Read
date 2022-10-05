@@ -1,19 +1,19 @@
 /*
 
-Instruction 	                      Code 	                        Execution Description
-                        RS 	R/W 	B7 	B6 	B5 	B4 	B3 	B2 	B1 	B0  time
-                        ----------------------------------------
-Clear display 	        0 	0 	  0 	0 	0 	0 	0 	0 	0 	1   1.52 ms   Clears display and returns cursor to the home position (address 0).
-Cursor home 	          0 	0 	  0 	0 	0 	0 	0 	0 	1 	* 	1.52 ms   Returns cursor to home position. Also returns display being shifted to the original position. DDRAM content remains unchanged. 	
-Entry mode set 	        0 	0 	  0 	0 	0 	0 	0 	1 	I/D S 	37 μs     Sets cursor move direction (I/D); specifies to shift the display (S). These operations are performed during data read/write. 	
-Display control 	      0 	0 	  0 	0 	0 	0 	1 	D 	C 	B 	37 μs     Sets on/off of all display (D), cursor on/off (C), and blink of cursor position character (B). 	
-display shift 	        0 	0 	  0 	0 	0 	1 	S/C	R/L	* 	* 	37 μs     Sets cursor-move or display-shift (S/C), shift direction (R/L). DDRAM content remains unchanged. 	
-Function set 	          0 	0 	  0 	0 	1 	DL 	N 	F 	* 	* 	37 μs     Sets interface data length (DL), number of display line (N), and character font (F). 	
-Set CGRAM address       0 	0 	  0 	1 	CGRAM address 	        37 μs     Sets the CGRAM address. CGRAM data are sent and received after this setting. 	
-Set DDRAM address       0 	0 	  1 	DDRAM address 	            37 μs     Sets the DDRAM address. DDRAM data are sent and received after this setting. 	
-Read busy flag  	      0 	1 	  BF 	CGRAM/DDRAM address 	      0 μs      Reads busy flag (BF) indicating internal operation being performed and reads CGRAM or DDRAM address counter contents (depending on previous instruction). 	
-Write RAM 	            1 	0 	  Write Data 	                    37 μs     Write data to CGRAM or DDRAM. 	
-Read from CG/DDRAM 	    1 	1 	  Read Data 	                    37 μs     Read data from CGRAM or DDRAM. 	
+Instruction                          Code                            Execution  Description
+                   RS  R/W    B7   B6   B5   B4   B3   B2   B1   B0  time
+                   ------------------------------------------------
+Clear display      0    0     0    0    0    0    0    0    0    1    1.52 ms   Clears display and returns cursor to the home position (address 0).
+Cursor home        0    0     0    0    0    0    0    0    1    *    1.52 ms   Returns cursor to home position. Also returns display being shifted to the original position. DDRAM content remains unchanged.    
+Entry mode set     0    0     0    0    0    0    0    1    I/D  S    37 μs     Sets cursor move direction (I/D); specifies to shift the display (S). These operations are performed during data read/write.    
+Display control    0    0     0    0    0    0    1    D    C    B    37 μs     Sets on/off of all display (D), cursor on/off (C), and blink of cursor position character (B).    
+display shift      0    0     0    0    0    1    S/C   R/L *    *    37 μs     Sets cursor-move or display-shift (S/C), shift direction (R/L). DDRAM content remains unchanged.    
+Function set       0    0     0    0    1    DL    N    F   *    *    37 μs     Sets interface data length (DL), number of display line (N), and character font (F).    
+Set CGRAM address  0    0     0    1    CGRAM address                 37 μs     Sets the CGRAM address. CGRAM data are sent and received after this setting.    
+Set DDRAM address  0    0     1    DDRAM address                      37 μs     Sets the DDRAM address. DDRAM data are sent and received after this setting.    
+Read busy flag     0    1     BF    CGRAM/DDRAM address               0 μs      Reads busy flag (BF) indicating internal operation being performed and reads CGRAM or DDRAM address counter contents (depending on previous instruction).    
+Write RAM          1    0     Write Data                              37 μs     Write data to CGRAM or DDRAM.    
+Read from CG/DDRAM 1    1     Read Data                               37 μs     Read data from CGRAM or DDRAM.    
 
 Instruction bit names —
 
@@ -33,22 +33,22 @@ BF - 0 = can accept instruction, 1 = internal operation in progress.
 
 Example commands:
 
-1	Function Set: 8-bit, 1 Line, 5x7 Dots	0x30	48
-2	Function Set: 8-bit, 2 Line, 5x7 Dots	0x38	56
-3	Function Set: 4-bit, 1 Line, 5x7 Dots	0x20	32
-4	Function Set: 4-bit, 2 Line, 5x7 Dots	0x28	40
-5	Entry Mode	0x06	6
-6	Display off Cursor off (clearing display without clearing DDRAM content)	0x08	8
-7	Display on Cursor on	0x0E	14
-8	Display on Cursor off	0x0C	12
-9	Display on Cursor blinking	0x0F	15
-10	Shift entire display left	0x18	24
-11	Shift entire display right	0x1C	30
-12	Move cursor left by one character	0x10	16
-13	Move cursor right by one character	0x14	20
-14	Clear Display (also clear DDRAM content)	0x01	1
-15	Set DDRAM address or coursor position on display	  0x80 + address*	 128 + address*
-16	Set CGRAM address or set pointer to CGRAM location	0x40 + address   64  + address
+1   Function Set: 8-bit, 1 Line, 5x7 Dots   0x30   48
+2   Function Set: 8-bit, 2 Line, 5x7 Dots   0x38   56
+3   Function Set: 4-bit, 1 Line, 5x7 Dots   0x20   32
+4   Function Set: 4-bit, 2 Line, 5x7 Dots   0x28   40
+5   Entry Mode   0x06   6
+6   Display off Cursor off (clearing display without clearing DDRAM content)   0x08   8
+7   Display on Cursor on   0x0E   14
+8   Display on Cursor off   0x0C   12
+9   Display on Cursor blinking   0x0F   15
+10   Shift entire display left   0x18   24
+11   Shift entire display right   0x1C   30
+12   Move cursor left by one character   0x10   16
+13   Move cursor right by one character   0x14   20
+14   Clear Display (also clear DDRAM content)   0x01   1
+15   Set DDRAM address or coursor position on display     0x80 + address*    128 + address*
+16   Set CGRAM address or set pointer to CGRAM location   0x40 + address   64  + address
 
 * DDRAM address
 
@@ -76,6 +76,7 @@ https://www.8051projects.net/lcd-interfacing/initialization.php
 
 #define SERIAL_BAUD 115200 // Baud rate for serial debugging
 
+
 #define RFID_RESET_PIN 12  
 #define RFID_SS_PIN 53   // Signal Input (when SPI enabled), Serial Data (when I2C enabled), Data input (When UART enabled)
 
@@ -87,20 +88,36 @@ int LCD_RW = 11;
 int LCD_PINS[] = { 3, 4, 5, 6, 7, 8, 9, 10 };  
 int LCD_ENABLE = 2;
 
+int ERROR_LED = 23;
+int SUCCESS_LED = 22;
 
 MFRC522 mfrc522(RFID_SS_PIN, RFID_RESET_PIN); 
 MFRC522::MIFARE_Key key;
 
 
-// LCD helper functions
+void error() {
+  digitalWrite(ERROR_LED, LOW);
+  digitalWrite(SUCCESS_LED, HIGH);
+}
 
+void success() {
+  digitalWrite(ERROR_LED, HIGH);
+  digitalWrite(SUCCESS_LED, LOW);
+}
+
+void neutral() {
+  digitalWrite(ERROR_LED, HIGH);
+  digitalWrite(SUCCESS_LED, HIGH);
+}
+
+// LCD helper functions
 /**
   Write command to LCD interface, each bit of the supplied value is sent to one of the data 
   pins on the 1602 chip. The value needs to be inverted because the signal identification 
   goes from D7 -> D0 instead of D0 -> D7
 
   value:  Command to send to LCD chip.
-  return: void
+  return: none
 **/
 void LcdCommandWrite(int value) {
   size_t pinLength = sizeof(LCD_PINS) / sizeof(int) - 1;
@@ -129,7 +146,7 @@ void LcdCommandWrite(int value) {
   goes from D7 -> D0 instead of D0 -> D7
 
   value:  Data to send to LCD chip.
-  return: void
+  return: none
 
 **/
 void LcdDataWrite(int value) {
@@ -152,9 +169,9 @@ void LcdDataWrite(int value) {
 }
 
 /**
-  Returns cursor to home position. Also returns display being shifted to the original position. DDRAM content remains unchanged. 	
+  Returns cursor to home position. Also returns display being shifted to the original position. DDRAM content remains unchanged.    
 
-  return: void
+  return: none
 
 **/
 void clearDisplay() {
@@ -166,9 +183,9 @@ void clearDisplay() {
 /**
   Set cursor position to be the first line with an optional offset.
 
-  offset: column offset 	
+  offset: column offset    
 
-  return: void
+  return: none
 
 **/
 void firstLine(unsigned int offset) {
@@ -179,9 +196,9 @@ void firstLine(unsigned int offset) {
 /**
   Set cursor position to be the second line with an optional offset.
 
-  offset: column offset 	
+  offset: column offset    
 
-  return: void
+  return: none
 
 **/
 void secondLine(unsigned int offset) {
@@ -237,29 +254,44 @@ bool willRead() {
 }
 
 
-void dumpData(byte block) {
+/**
+  Read data from RFID, this may require authentication to be performed if the PICC type is MIFARE (mini, 1k or 4k).
+
+  block: block number to read data from (0-based index)
+  return: none
+**/
+void readRfidData(byte block) {
   byte buffer1[18];
   byte len = 18;
   byte status = 0;
 
+  // Obtain the PICC type
   MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
+  
+  // Determine if authorisation is required
   bool needAuth = MFRC522::PICC_TYPE_MIFARE_MINI == piccType || MFRC522::PICC_TYPE_MIFARE_1K == piccType || MFRC522::PICC_TYPE_MIFARE_4K == piccType;
 
   if (needAuth) {
-    status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, &key, &(mfrc522.uid)); //line 834 of MFRC522.cpp file
+    // Authenticate
+    status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, &key, &(mfrc522.uid)); 
 
     if (status != MFRC522::STATUS_OK) {
+      error(); // Enable 'error' LED
       LOG(F("Auth failed: "));
       LOG(mfrc522.GetStatusCodeName(status));
       return;
     }
+
+    success(); // Enable 'success' LED
   }
   
+  // Attempt to read data from RFID
   status = mfrc522.MIFARE_Read(block, buffer1, &len);  
   
   if (status != MFRC522::STATUS_OK) {
     LOG(F("Reading failed: "));
     LOG(mfrc522.GetStatusCodeName(status));
+    error();
     return;
   }
 
@@ -269,26 +301,24 @@ void dumpData(byte block) {
 
   for (uint8_t i = 0; i < 16; i++) {
     if (buffer1[i] < 0x10) {
-      Serial.print("0");      
+      LOG("0");      
     }
-    Serial.print(buffer1[i], HEX);
-    Serial.print(" ");
+    LOG(buffer1[i], HEX);
+    LOG(" ");
   }
   
-  // Serial.print("   ");
-
-
-  Serial.println("");
+  success();
+  LOGLN("");
 }
 /**
 
 **/
 void dumpPicType() {
 
-  dumpData(0);
-  dumpData(1);
-  dumpData(2);
-  dumpData(3);
+  readRfidData(0);
+  readRfidData(1);
+  readRfidData(2);
+  readRfidData(3);
 
   LOGLN("");
 
@@ -303,7 +333,7 @@ void dumpPicType() {
   if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI
       && piccType != MFRC522::PICC_TYPE_MIFARE_1K
       && piccType != MFRC522::PICC_TYPE_MIFARE_4K) {
-    LOGLN(F("This sample only works with MIFARE Classic cards."));
+    error();
     return;
   }
 }
@@ -324,19 +354,19 @@ void toHex(unsigned char *in, size_t in_sz, unsigned char *out) {
 }
 
 void dumpHex(unsigned char *in, size_t insz) {
-  clearDisplay();
-  firstLine(0);
-
   char hexValue[insz * 3];
   toHex(in, insz, hexValue);
-  LOGLN(hexValue);
+  
+  clearDisplay();
+  firstLine(0);
   writeText(hexValue);
+  
+  LOG(F("Card UID: "));
+  LOGLN(hexValue);
 }
 
 void dumpUID() {
-  LOG(F("Card UID: "));
   dumpHex(mfrc522.uid.uidByte, mfrc522.uid.size);
-  LOGLN("");
 }
 
 void setUID(byte *newUid, byte uidSize) {
@@ -354,6 +384,10 @@ void dumpContents() {
 }
 
 void setup() {
+  // Configure state LEDS
+  pinMode(SUCCESS_LED, OUTPUT);
+  pinMode(ERROR_LED, OUTPUT);
+  
   #ifdef DEBUG
     Serial.begin(SERIAL_BAUD);  
     while (!Serial);  
@@ -393,15 +427,22 @@ void setup() {
 
   LcdCommandWrite(0x80);  // Set DDRAM address to beginning of line
   delay(20);
+
+  neutral();
 }
 
 
 
 void loop() {
+  // Wait for a card to be presented
   if (!willRead()) {
-    delay(1000);
+    neutral(); // Disable state LEDs
+    delay(250);
     return;
   }
+
+  // Emable 'success' LED
+  success();
 
   dumpUID();
   dumpPicType();
@@ -409,13 +450,4 @@ void loop() {
 
   // Halt PICC and re-select it so DumpToSerial doesn't get confused
   mfrc522.PICC_HaltA();
-
-  if (!willRead()) {
-    LOGLN(F("Nothing new"));
-    return;
-  }
-
-  dumpContents();
-
-  delay(3000);
 }
