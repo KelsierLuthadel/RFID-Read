@@ -291,7 +291,7 @@ void readClassicSector(MFRC522::Uid uid, MFRC522::MIFARE_Key *key, byte sector) 
 	// Each group has access bits [C1 C2 C3]. In this code C1 is MSB and C3 is LSB.
 	// The four CX bits are stored together in a nible cx and an inverted nible cx_.
 
-  
+
 	byte c1, c2, c3;		// Nibbles
 	byte c1_, c2_, c3_;		// Inverted nibbles
 	bool invertedError;		// True if one of the inverted nibbles did not match
@@ -464,7 +464,7 @@ void readClassic(MFRC522::Uid uid, MFRC522::PICC_Type piccType,	MFRC522::MIFARE_
   if (sectors) {
 		Serial.println(F("Sector Block   0  1  2  3   4  5  6  7   8  9 10 11  12 13 14 15  AccessBits"));
 		// for (int8_t i = sectors - 1; i >= 0; i--) {
-    for (int8_t i = 0; i < sectors; i++) {
+    for (int8_t i = 0; i < sectors - 1; i++) {
 			readClassicSector(uid, key, i);
 		}
 	}
@@ -686,6 +686,7 @@ void loop() {
   if (!willRead()) {
     neutral(); // Disable state LEDs
     delay(250);
+    LOG(".");
     return;
   }
 
@@ -695,8 +696,10 @@ void loop() {
   dumpUID();
   dumpPiccType();
   getContents(mfrc522.uid);
+  LOG("<END>");
   
   // Halt PICC and re-select it so DumpToSerial doesn't get confused
   mfrc522.PICC_HaltA();
+  mfrc522.PCD_StopCrypto1();
   
 }
