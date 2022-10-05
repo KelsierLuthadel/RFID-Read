@@ -254,74 +254,319 @@ bool willRead() {
 }
 
 
-/**
-  Read data from RFID, this may require authentication to be performed if the PICC type is MIFARE (mini, 1k or 4k).
+bool authenticate(byte blockAddr, MFRC522::MIFARE_Key *key, MFRC522::Uid *uid) {
+  MFRC522::StatusCode status;
 
-  block: block number to read data from (0-based index)
-  return: none
-**/
-void readRfidData(byte block) {
-  byte buffer1[18];
-  byte len = 18;
-  byte status = 0;
-
-  // Obtain the PICC type
-  MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
-  
-  // Determine if authorisation is required
-  bool needAuth = MFRC522::PICC_TYPE_MIFARE_MINI == piccType || MFRC522::PICC_TYPE_MIFARE_1K == piccType || MFRC522::PICC_TYPE_MIFARE_4K == piccType;
-
-  if (needAuth) {
-    // Authenticate
-    status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, &key, &(mfrc522.uid)); 
-
-    if (status != MFRC522::STATUS_OK) {
-      error(); // Enable 'error' LED
-      LOG(F("Auth failed: "));
-      LOG(mfrc522.GetStatusCodeName(status));
-      return;
-    }
-
-    success(); // Enable 'success' LED
-  }
-  
-  // Attempt to read data from RFID
-  status = mfrc522.MIFARE_Read(block, buffer1, &len);  
+  status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, blockAddr, key, uid);
   
   if (status != MFRC522::STATUS_OK) {
-    LOG(F("Reading failed: "));
-    LOG(mfrc522.GetStatusCodeName(status));
-    error();
-    return;
+    LOG(F("PCD_Authenticate() failed: "));
+    LOG(MFRC522::GetStatusCodeName(status));
+    return false;
   }
 
-  // if (needAuth) {
-  //   mfrc522.PCD_StopCrypto1();
-  // }
-
-  for (uint8_t i = 0; i < 16; i++) {
-    if (buffer1[i] < 0x10) {
-      LOG("0");      
-    }
-    LOG(buffer1[i], HEX);
-    LOG(" ");
-  }
-  
-  success();
-  LOGLN("");
+  return true;
 }
+
 /**
+  Read the memory contents of a MIFARE Classic sector.
+  Note: Memory is read in reverse, where
 
 **/
-void dumpPicType() {
+void readClassicSector(MFRC522::Uid uid, MFRC522::MIFARE_Key *key, byte sector) {
+  MFRC522::StatusCode status;
+	byte firstBlock;		  // Address of the first block
+	byte no_of_blocks;		// Number of blocks in a sector
+	bool authenticated;	
+	
+	// The access bits are stored in a peculiar fashion.
+	
+  // There are four groups:
+	//		g[3]	Access bits for the sector trailer, block 3 (for sectors 0-31) or block 15 (for sectors 32-39)
+	//		g[2]	Access bits for block 2 (for sectors 0-31) or blocks 10-14 (for sectors 32-39)
+	//		g[1]	Access bits for block 1 (for sectors 0-31) or blocks 5-9 (for sectors 32-39)
+	//		g[0]	Access bits for block 0 (for sectors 0-31) or blocks 0-4 (for sectors 32-39)
 
-  readRfidData(0);
-  readRfidData(1);
-  readRfidData(2);
-  readRfidData(3);
 
-  LOGLN("");
+	// Each group has access bits [C1 C2 C3]. In this code C1 is MSB and C3 is LSB.
+	// The four CX bits are stored together in a nible cx and an inverted nible cx_.
 
+  
+	byte c1, c2, c3;		// Nibbles
+	byte c1_, c2_, c3_;		// Inverted nibbles
+	bool invertedError;		// True if one of the inverted nibbles did not match
+	byte g[4] = {0, 0, 0, 0};				// Access bits for each of the four groups.
+	byte group;				// 0-3 - active group for access bits
+	bool firstInGroup;		// True for the first block dumped in the group
+	
+	// Determine position and size of sector.
+	if (sector < 32) { // Sectors 0..31 has 4 blocks each
+		no_of_blocks = 4;
+		firstBlock = sector * no_of_blocks;
+	}
+	else if (sector < 40) { // Sectors 32-39 has 16 blocks each
+		no_of_blocks = 16;
+		firstBlock = 128 + (sector - 32) * no_of_blocks;
+	}
+	else { // Illegal input, no MIFARE Classic PICC has more than 40 sectors.
+		return;
+	}
+		
+	// Dump blocks, highest address first.
+	byte byteCount;
+	byte buffer[18];
+	byte blockAddr;
+	authenticated = false;
+	invertedError = false;	
+	
+  for (int8_t blockOffset = 0; blockOffset < no_of_blocks; blockOffset++) {
+		blockAddr = firstBlock + blockOffset;
+		
+    // Sector number
+		
+    if (blockOffset == no_of_blocks - 1) {
+			if(sector < 10)
+				LOG(F("   ")); 
+			else
+				LOG(F("  ")); 
+			LOG(sector);
+			LOG(F("   "));
+		}
+		else {
+			LOG(F("       "));
+		}
+
+		// Block number
+		if(blockAddr < 10)
+			LOG(F("   ")); // Pad with spaces
+		else {
+			if(blockAddr < 100)
+				LOG(F("  ")); // Pad with spaces
+			else
+				LOG(F(" ")); // Pad with spaces
+		}
+    
+		LOG(blockAddr);
+		LOG(F("  "));
+		
+    // Establish encrypted communications before reading the first block
+		if (!authenticated) {
+      if (false == authenticate(firstBlock, key, &(mfrc522.uid))) {
+				return;
+      }
+      authenticated = true;
+		}
+		
+    // Read block
+		byteCount = sizeof(buffer);
+    
+		status = mfrc522.MIFARE_Read(blockAddr, buffer, &byteCount);
+		
+    if (status != MFRC522::STATUS_OK) {
+			LOG(F("MIFARE_Read() failed: "));
+			LOG(mfrc522.GetStatusCodeName(status));
+			continue;
+		}
+
+		// Dump data
+		for (byte index = 0; index < 16; index++) {
+			if(buffer[index] < 0x10)
+				LOG(F(" 0"));
+			else
+				LOG(F(" "));
+			LOG(buffer[index], HEX);
+			if ((index % 4) == 3) {
+				LOG(F(" "));
+			}
+		}
+		// Parse access bits
+		if (blockOffset == no_of_blocks - 1) {
+			c1  = buffer[7] >> 4;
+			c2  = buffer[8] & 0xF;
+			c3  = buffer[8] >> 4;
+			c1_ = buffer[6] & 0xF;
+			c2_ = buffer[6] >> 4;
+			c3_ = buffer[7] & 0xF;
+			invertedError = (c1 != (~c1_ & 0xF)) || (c2 != (~c2_ & 0xF)) || (c3 != (~c3_ & 0xF));
+			g[0] = ((c1 & 1) << 2) | ((c2 & 1) << 1) | ((c3 & 1) << 0);
+			g[1] = ((c1 & 2) << 1) | ((c2 & 2) << 0) | ((c3 & 2) >> 1);
+			g[2] = ((c1 & 4) << 0) | ((c2 & 4) >> 1) | ((c3 & 4) >> 2);
+			g[3] = ((c1 & 8) >> 1) | ((c2 & 8) >> 2) | ((c3 & 8) >> 3);
+		}
+		
+		// Which access group is this block in?
+		if (no_of_blocks == 4) {
+			group = blockOffset;
+			firstInGroup = true;
+		}
+		else {
+			group = blockOffset / 5;
+			firstInGroup = (group == 3) || (group != (blockOffset + 1) / 5);
+		}
+		
+		if (firstInGroup) {
+			// Print access bits
+			LOG(F(" [ "));
+			LOG((g[group] >> 2) & 1, DEC); LOG(F(" "));
+			LOG((g[group] >> 1) & 1, DEC); LOG(F(" "));
+			LOG((g[group] >> 0) & 1, DEC);
+			LOG(F(" ] "));
+			if (invertedError) {
+				LOG(F(" Inverted access bits did not match! "));
+			}
+		}
+		
+		if (group != 3 && (g[group] == 1 || g[group] == 6)) { // value block
+			int32_t value = (int32_t(buffer[3])<<24) | (int32_t(buffer[2])<<16) | (int32_t(buffer[1])<<8) | int32_t(buffer[0]);
+			LOG(F(" Value=0x")); Serial.print(value, HEX);
+			LOG(F(" Adr=0x")); Serial.print(buffer[12], HEX);
+		}
+		
+    LOGLN();
+    
+    if (blockOffset == no_of_blocks - 1) {
+      LOGLN();
+    }
+	}
+}
+
+int8_t getSectors(MFRC522::PICC_Type piccType) {
+  int8_t sectors = 0;
+	switch (piccType) {
+		case MFRC522::PICC_TYPE_MIFARE_MINI:
+			// Has 5 sectors * 4 blocks/sector * 16 bytes/block = 320 bytes.
+			sectors = 5;
+			break;
+			
+		case MFRC522::PICC_TYPE_MIFARE_1K:
+			// Has 16 sectors * 4 blocks/sector * 16 bytes/block = 1024 bytes.
+			sectors = 16;
+			break;
+			
+		case MFRC522::PICC_TYPE_MIFARE_4K:
+			// Has (32 sectors * 4 blocks/sector + 8 sectors * 16 blocks/sector) * 16 bytes/block = 4096 bytes.
+			sectors = 40;
+			break;
+			
+		default:
+			break;
+	}
+
+  return sectors;
+}
+
+/**
+  Dumps memory contents of a MIFARE Classic PICC.
+**/
+void readClassic(MFRC522::Uid uid, MFRC522::PICC_Type piccType,	MFRC522::MIFARE_Key *key	) {
+  int8_t sectors = getSectors(piccType);
+
+  if (sectors) {
+		Serial.println(F("Sector Block   0  1  2  3   4  5  6  7   8  9 10 11  12 13 14 15  AccessBits"));
+		// for (int8_t i = sectors - 1; i >= 0; i--) {
+    for (int8_t i = 0; i < sectors; i++) {
+			readClassicSector(uid, key, i);
+		}
+	}
+}
+
+
+/**
+   Dumps memory contents of a MIFARE Ultralight PICC.
+**/
+
+void readUltraLight(byte pages) {
+  MFRC522::StatusCode status;
+	byte byteCount;
+	byte buffer[18];
+	byte i;
+
+  for (byte page = 0; page < pages; page +=4) { // Read returns data for 4 pages at a time.
+    byteCount = sizeof(buffer);
+    MFRC522 miFare;
+    status = miFare.MIFARE_Read(page, buffer, &byteCount);
+
+    if (status != MFRC522::STATUS_OK) {
+			LOG(F("MIFARE_Read() failed: "));
+			LOGLN(MFRC522::GetStatusCodeName(status));
+      error();
+			break;
+		}
+
+    for(byte offset = 0; offset < 4; offset++) {
+      i = page + offset;
+      if (i < 10) {
+        LOG("  ");
+      } else {
+        LOG(" ");
+      }
+      LOG(i);
+      LOG(" ");
+
+      for (byte index = 0; index < 4; index++) {
+				i = 4 * offset + index;
+				if(buffer[i] < 0x10)
+					LOG(F(" 0"));
+				else
+					LOG(F(" "));
+				LOG(buffer[i], HEX);
+			}
+			LOGLN("");
+      
+    }
+
+  }
+
+}
+
+/**
+  Get the data stored on the RFID chip. 
+
+  uid: UID of a PICC 
+**/
+
+void getContents(MFRC522::Uid uid) {
+  MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(uid.sak);
+
+  switch (piccType) {
+		case MFRC522::PICC_TYPE_MIFARE_MINI:
+		case MFRC522::PICC_TYPE_MIFARE_1K:
+		case MFRC522::PICC_TYPE_MIFARE_4K:
+			for (byte i = 0; i < 6; i++) {
+				key.keyByte[i] = 0xFF;
+			}
+
+      readClassic(uid, piccType, &key);
+			break;
+			
+		case MFRC522::PICC_TYPE_MIFARE_UL:
+			readUltraLight(43 /*16*/);
+			break;
+			
+		case MFRC522::PICC_TYPE_ISO_14443_4:
+		case MFRC522::PICC_TYPE_MIFARE_DESFIRE:
+		case MFRC522::PICC_TYPE_ISO_18092:
+		case MFRC522::PICC_TYPE_MIFARE_PLUS:
+		case MFRC522::PICC_TYPE_TNP3XXX:
+			LOGLN("OTHER");
+			break;
+			
+		case MFRC522::PICC_TYPE_UNKNOWN:
+		case MFRC522::PICC_TYPE_NOT_COMPLETE:
+		default:
+      LOGLN("UNKNOWN");
+			break; // No memory dump here
+	}
+
+}
+
+
+/**
+  Dump the PICC (Proximity Integrated Circuit) type and SAK (Select AcKnowledgement) to the serial port.
+  This is for debugging and analysis.
+  
+**/
+void dumpPiccType() {
   MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
 
   LOG(F("PICC type: "));
@@ -329,19 +574,19 @@ void dumpPicType() {
   LOG(F(" (SAK "));
   LOG(mfrc522.uid.sak);
   LOGLN(")");
-
-  if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI
-      && piccType != MFRC522::PICC_TYPE_MIFARE_1K
-      && piccType != MFRC522::PICC_TYPE_MIFARE_4K) {
-    error();
-    return;
-  }
 }
 
-void toHex(unsigned char *in, size_t in_sz, unsigned char *out) {
+/**
+  Convert byte data to ASCII in the form of a hex string.
+
+  in: Binary data
+  in_sz: Size of the binary data
+  out: A buffer to hold the converted data. This must be 3 times the size of the inout data
+**/
+void binToHex(byte *in, size_t in_sz, unsigned char *out) {
   const char *hex = "0123456789ABCDEF";
 
-  unsigned char *pin = in;
+  byte *pin = in;
   unsigned char *pout = out;
 
   for (; pin < in + in_sz; pin++, pout += 3) {
@@ -353,20 +598,28 @@ void toHex(unsigned char *in, size_t in_sz, unsigned char *out) {
   pout[-1] = 0;
 }
 
-void dumpHex(unsigned char *in, size_t insz) {
-  char hexValue[insz * 3];
-  toHex(in, insz, hexValue);
+
+void getUID(byte *uidByte, size_t uidSize, unsigned char *out) {
+  binToHex(uidByte, uidSize, out);
+}
+
+/**
+ Dump the UID to the serial port for the currently presented card.
+ 
+**/
+
+void dumpUID() {
+  size_t uidSize = mfrc522.uid.size;
+  char hexValue[uidSize * 3];
   
+  getUID(mfrc522.uid.uidByte, uidSize, hexValue);
+
   clearDisplay();
   firstLine(0);
   writeText(hexValue);
-  
+
   LOG(F("Card UID: "));
   LOGLN(hexValue);
-}
-
-void dumpUID() {
-  dumpHex(mfrc522.uid.uidByte, mfrc522.uid.size);
 }
 
 void setUID(byte *newUid, byte uidSize) {
@@ -376,11 +629,6 @@ void setUID(byte *newUid, byte uidSize) {
     LOGLN(F("Failed to write UID."));
   }
   delay(2000);
-}
-
-void dumpContents() {
-  LOGLN(F("UID and contents:"));
-  mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
 }
 
 void setup() {
@@ -445,9 +693,10 @@ void loop() {
   success();
 
   dumpUID();
-  dumpPicType();
-  dumpContents();
-
+  dumpPiccType();
+  getContents(mfrc522.uid);
+  
   // Halt PICC and re-select it so DumpToSerial doesn't get confused
   mfrc522.PICC_HaltA();
+  
 }
