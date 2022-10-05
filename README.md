@@ -65,7 +65,7 @@ Read from CG/DDRAM: Read data from CGRAM or DDRAM.
 ### Example commands:
 
 | Command | Value |
-|-------|---------|
+|---------|-------|
 | Function Set: 8-bit, 1 Line, 5x7 Dots | 0x30 | 
 | Function Set: 8-bit, 2 Line, 5x7 Dots | 0x38 | 
 | Function Set: 4-bit, 1 Line, 5x7 Dots | 0x20 | 
@@ -97,6 +97,30 @@ https://www.8051projects.net/lcd-interfacing/initialization.php
 ## RFID Chip
 
 The MFRC522 chip is a read-write chip for contact communications at 13.56MHZ which also supports ISO 14443A / MIFRARE mode.
+
+
+### SAK coding
+
+| Bit number                                        | UID size | Memory    | Sec. Level | Hex Value | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 |
+|---------------------------------------------------|----------|-----------|------------|-----------|---|---|---|---|---|---|---|---|
+| MIFARE Ultralight C CL2                           | double   |           |            | 00        | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| MIFARE Classic 1K                                 | single   | 1K        |            | 08        | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
+| MIFARE Classic 4K                                 | single   | 4K        |            | 18        | 0 | 0 | 0 | 1 | 1 | 0 | 0 | 0 |
+| MIFARE Classic 1K CL2                             | double   | 1K        |            | 08        | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
+| MIFARE Classic 4K CL2                             | double   | 4K        |            | 18        | 0 | 0 | 0 | 1 | 1 | 0 | 0 | 0 |
+| MIFARE Plus                                       | single   | 2K,SE(1K) | 1          | 08        | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
+| MIFARE Plus                                       | single   | 4K        | 1          | 18        | 0 | 0 | 0 | 1 | 1 | 0 | 0 | 0 |
+| MIFARE Plus CL2                                   | double   | 2K,SE(1K) | 1          | 08        | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
+| MIFARE Plus CL2                                   | double   | 4K        | 1          | 18        | 0 | 0 | 0 | 1 | 1 | 0 | 0 | 0 |
+| MIFARE Plus                                       | single   | 2K        | 2          | 10        | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 |
+| MIFARE Plus                                       | single   | 4K        | 2          | 11        | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 |
+| MIFARE Plus CL2                                   | double   | 2K        | 2          | 10        | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 |
+| MIFARE Plus CL2                                   | double   | 4K        | 2          | 11        | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 |
+| MIFARE Plus                                       | single   | 2K,SE(1K) | 3          | 20        | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 |
+| MIFARE Plus                                       | single   | 4K        | 3          | 20        | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 |
+| MIFARE Plus CL2                                   | double   | 2K,SE(1K) | 3          | 20        | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 |
+| MIFARE Plus CL2                                   | double   | 4K        | 3          | 20        | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 |
+
 
 
 ![Circuit](./arduino.svg)
