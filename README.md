@@ -127,251 +127,30 @@ The MFRC522 chip is a read-write chip for contact communications at 13.56MHZ whi
 
 ---
 
-### Memory layout (1k variant)
 
-<style type="text/css">
-.tg  {border-collapse:collapse;border-spacing:0;}
-.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg .tg-baqh{text-align:center;vertical-align:top}
-.tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}
-.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
-.tg .tg-0lax{text-align:left;vertical-align:top}
-</style>
-<table class="tg">
-<thead>
-  <tr>
-    <th class="tg-0pky" colspan="2"></th>
-    <th class="tg-c3ow" colspan="16">Byte number within block</th>
-    <th class="tg-0pky"></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td class="tg-0pky">Sector</td>
-    <td class="tg-0pky">Block</td>
-    <td class="tg-0pky">0</td>
-    <td class="tg-0pky">1</td>
-    <td class="tg-0pky">2</td>
-    <td class="tg-0pky">3</td>
-    <td class="tg-0pky">4</td>
-    <td class="tg-0pky">5</td>
-    <td class="tg-0pky">6</td>
-    <td class="tg-0pky">7</td>
-    <td class="tg-0pky">8</td>
-    <td class="tg-0pky">9</td>
-    <td class="tg-0pky">10</td>
-    <td class="tg-0pky">11</td>
-    <td class="tg-0pky">12</td>
-    <td class="tg-0pky">13</td>
-    <td class="tg-0pky">14</td>
-    <td class="tg-0pky">15</td>
-    <td class="tg-0pky">Description</td>
-  </tr>
-  <tr>
-    <td class="tg-0pky">15</td>
-    <td class="tg-0pky">3</td>
-    <td class="tg-c3ow" colspan="6" style="text-align:center">Key A</td>
-    <td class="tg-c3ow" colspan="4">Access Bits</td>
-    <td class="tg-c3ow" colspan="6">Key B</td>
-    <td class="tg-0pky">Trailer 15</td>
-  </tr>
-  <tr>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky">2</td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky">Data</td>
-  </tr>
-  <tr>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky">1</td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky">Data</td>
-  </tr>
-  <tr>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky">0</td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky">Data</td>
-  </tr>
-  <tr>
-    <td class="tg-baqh">:</td>
-    <td class="tg-baqh">:</td>
-    <td class="tg-baqh" colspan="6">Key A</td>
-    <td class="tg-baqh" colspan="4">Access Bits</td>
-    <td class="tg-baqh" colspan="6">Key B</td>
-    <td class="tg-0lax"></td>
-  </tr>
-  <tr>
-    <td class="tg-baqh">:</td>
-    <td class="tg-baqh">:</td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-  </tr>
-  <tr>
-    <td class="tg-baqh">:</td>
-    <td class="tg-baqh">:</td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-  </tr>
-  <tr>
-    <td class="tg-baqh">:</td>
-    <td class="tg-baqh">:</td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-  </tr>
-  <tr>
-    <td class="tg-0lax">0</td>
-    <td class="tg-0lax">3</td>
-    <td class="tg-baqh" colspan="6">Key A</td>
-    <td class="tg-baqh" colspan="4">Access Bits</td>
-    <td class="tg-baqh" colspan="6">Key B</td>
-    <td class="tg-0lax">Trailer 0</td>
-  </tr>
-  <tr>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax">2</td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax">Data</td>
-  </tr>
-  <tr>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax">1</td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax">Data</td>
-  </tr>
-  <tr>
-    <td class="tg-0lax"></td>
-    <td class="tg-0lax">0</td>
-    <td class="tg-baqh" colspan="16">Manufacturer Data</td>
-    <td class="tg-0lax">Manufacturer Block</td>
-  </tr>
-</tbody>
-</table>
+|        |       |          | | | | | | | | | | |  |  |  |  |  |  |  |           |
+|--------|-------|----------|-|-|-|-|-|-|-|-|-|-|--|--|--|--|--|--|--|-----------|
+| Sector | Block |          |0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|  |Description|
+|  15    |   3   |          | | | | | | | | | | |  |  |  |  |  |  |  |Sector Trailer 15|
+|        |   2   |          | | | | | | | | | | |  |  |  |  |  |  |  |Data |
+|        |   1   |          | | | | | | | | | | |  |  |  |  |  |  |  |Data |
+|        |   0   |          | | | | | | | | | | |  |  |  |  |  |  |  |Data |
+|  14    |   3   |          | | | | | | | | | | |  |  |  |  |  |  |  |Sector Trailer 14|
+|        |   2   |          | | | | | | | | | | |  |  |  |  |  |  |  |Data |
+|        |   1   |          | | | | | | | | | | |  |  |  |  |  |  |  |Data |
+|        |   0   |          | | | | | | | | | | |  |  |  |  |  |  |  |Data |
+|  :     |   :   |          | | | | | | | | | | |  |  |  |  |  |  |  ||
+|        |   :   |          | | | | | | | | | | |  |  |  |  |  |  |  ||
+|        |   :   |          | | | | | | | | | | |  |  |  |  |  |  |  ||
+|        |   :   |          | | | | | | | | | | |  |  |  |  |  |  |  ||
+|  0     |   3   |          | | | | | | | | | | |  |  |  |  |  |  |  |Sector Trailer 0|
+|        |   2   |          | | | | | | | | | | |  |  |  |  |  |  |  |Data |
+|        |   1   |          | | | | | | | | | | |  |  |  |  |  |  |  |Data |
+|        |   0   |          | | | | | | | | | | |  |  |  |  |  |  |  |Manafacturer Block |
 
 
-<br><br><br>
+
+
+https://ciesie.com/post/rfid_explained/
 
 ![Circuit](./arduino.svg)
