@@ -127,6 +127,8 @@ The MFRC522 chip is a read-write chip for contact communications at 13.56MHZ whi
 
 ---
 
+### Memory layout (1k variant)
+
 <style type="text/css">
 .tg  {border-collapse:collapse;border-spacing:0;}
 .tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
@@ -171,10 +173,10 @@ The MFRC522 chip is a read-write chip for contact communications at 13.56MHZ whi
   <tr>
     <td class="tg-0pky">15</td>
     <td class="tg-0pky">3</td>
-    <td class="tg-c3ow" colspan="6">Key A</td>
+    <td class="tg-c3ow" colspan="6" style="text-align:center">Key A</td>
     <td class="tg-c3ow" colspan="4">Access Bits</td>
     <td class="tg-c3ow" colspan="6">Key B</td>
-    <td class="tg-0pky">Sector Trailer 15</td>
+    <td class="tg-0pky">Trailer 15</td>
   </tr>
   <tr>
     <td class="tg-0pky"></td>
@@ -316,7 +318,7 @@ The MFRC522 chip is a read-write chip for contact communications at 13.56MHZ whi
     <td class="tg-baqh" colspan="6">Key A</td>
     <td class="tg-baqh" colspan="4">Access Bits</td>
     <td class="tg-baqh" colspan="6">Key B</td>
-    <td class="tg-0lax">Data Trailer 0</td>
+    <td class="tg-0lax">Trailer 0</td>
   </tr>
   <tr>
     <td class="tg-0lax"></td>
