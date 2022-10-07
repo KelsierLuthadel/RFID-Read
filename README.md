@@ -127,8 +127,9 @@ The MFRC522 chip is a read-write chip for contact communications at 13.56MHZ whi
 
 ---
 
-# MIFARE 1k Memory layout
+### MIFARE 1k Memory layout
 
+```
 +--------+-------+-----------------------------+--------------+----+-----------------------------+-------------+
 | Sector | Block |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 | 11 | 12 | 13 | 14 | 15 | Description |
 +--------+-------+-----------------------------+--------------+----+-----------------------------+-------------+
@@ -172,7 +173,28 @@ The MFRC522 chip is a read-write chip for contact communications at 13.56MHZ whi
 +--------+-------+-----------------------------+--------------+----+-----------------------------+-------------+
 |        |   0   |                               Manafacturer Data                               |    Block    |
 +--------+-------+-----------------------------+--------------+----+-----------------------------+-------------+
+```
 
+## Default keys list
+
+```
+ffffffffffff
+a0b0c0d0e0f0
+a1b1c1d1e1f1
+a0a1a2a3a4a5 
+b0b1b2b3b4b5
+4d3a99c351dd 
+1a982c7e459a
+000000000000
+aabbccddeeff
+d3f7d3f7d3f7
+aabbccddeeff
+714c5c886e97
+587ee5f9350f
+a0478cc39091
+533cb6c723f6
+8fd0a4f256e9
+```
 
 ## Circuit
 
